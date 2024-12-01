@@ -5,6 +5,7 @@ provider_url = "https://mainnet.infura.io/v3/b0123c9ee0d74f2e98a99831cbc90ce4"
 
 web3 = Web3()
 wallet_address = web3.eth.account.from_key(wallet_private_key).address
+print(wallet_address)
 
 def problem1_get_eth_balance(wallet_address, provider_url):
     web3 = Web3(Web3.HTTPProvider(provider_url))
