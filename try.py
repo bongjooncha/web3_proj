@@ -1,22 +1,26 @@
-from web3 import Web3
+import base64
+from struct import unpack
 
-# 이더리움 네트워크에 연결 (예: Infura 사용)
-infura_url = 'https://mainnet.infura.io/v3/b0123c9ee0d74f2e98a99831cbc90ce4'
-web3 = Web3(Web3.HTTPProvider(infura_url))
+def decode_token_data(data):
+    # Base64 디코딩 전에 패딩을 추가
+    padding = len(data) % 4
+    if padding != 0:
+        data += b'=' * (4 - padding)  # bytes 형식으로 패딩 추가
 
-# UMA 스마트 계약 주소 및 ABI
-uma_contract_address = '0x04Fa0d235C4abf4BcF4787aF4CF447DE572eF828'
-uma_abi = '[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}]'
+    # 데이터 디코딩 (Base64 -> 바이트)
+    decoded_data = base64.b64decode(data)
 
-# UMA 계약 인스턴스 생성
-uma_contract = web3.eth.contract(address=uma_contract_address, abi=uma_abi)
+    # 첫 8바이트는 토큰 잔액을 나타내는 UInt64 형식입니다.
+    balance = unpack('Q', decoded_data[:8])[0]
 
-# 조회할 주소
-address = '0x95513B21C07e410E38DAF3635bD357115Cc8E168'
+    print(f"Token Balance: {balance}")
+    
+    # 나머지 데이터를 출력하여 추가적인 정보를 확인
+    print(f"Remaining Data: {decoded_data[8:]}")
+    return balance
 
-# UMA 잔액 조회
-balance = uma_contract.functions.balanceOf(address).call()
+# 예시 데이터 (디코딩할 바이너리 데이터)
+data = b'\r\xfcZU8\xb6S\x18\xa9\xbe\x96\x0f98\x83\x96\x95\xc5\xaa9\x15\x92<\x13\r\xad\x89\xb7\xb8\xf2zx\xd8\x91+\xae\xca\x9a\x87\x95\xb8\x91S\xf5\x06\x98N\x9f\xd3i\xbc-n\xec&\xe0C\x18\x84n\xa4\xb8?\xd0\xfa(\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\xb5\xbd\x9e\xcbg\x9d6\x1a\xdf0o\xf5\x8b\xd1\xdc\xab9.\x1e\xc9&\xcf\x9c\xe8\x85\x95U\x01\x8e\xc5m\x1f\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
 
-# UMA는 소수점 18자리까지 있으므로, 이를 반영하여 출력
-uma_balance = balance / (10 ** 18)
-print(f"UMA Balance: {uma_balance}")
+# 잔액을 디코딩하고 출력
+decode_token_data(data)
